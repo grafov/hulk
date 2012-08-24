@@ -9,12 +9,12 @@ This tool targeted for load testing and may really down badly configured server.
 
 Example:
 
-  hulk -url http://example.com/test/
+    $ hulk -url http://example.com/test/
 
 Useful environment vars:
 
-  GOMAXPROCS - set it to number of your CPUs or higher
-  HULKMAXPROC - limit the connection pool
+* GOMAXPROCS - set it to number of your CPUs or higher
+* HULKMAXPROC - limit the connection pool
 
 license
 =======
