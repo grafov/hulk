@@ -1,5 +1,13 @@
 package main
 
+/*
+ HULK DoS tool on Goroutines. Ported from Python. 
+ Original Python utility by Barry Shteiman http://www.sectorix.com/2012/05/17/hulk-web-server-dos-tool/
+
+ This go program licensed under GPLv3.
+ Copyright Alexander I.Grafov <grafov@gmail.com>
+*/
+
 import (
 	"os"
 	"flag"
