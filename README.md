@@ -1,4 +1,4 @@
-hulk dos tool
+Hulk DoS tool
 =============
 
 HULK DoS tool ported to Go language from Python. 
@@ -13,10 +13,12 @@ Example:
 
 Useful environment vars:
 
-* GOMAXPROCS - set it to number of your CPUs or higher
-* HULKMAXPROC - limit the connection pool
+* GOMAXPROCS
+  Set it to number of your CPUs or higher.
+* HULKMAXPROC
+  Limit the connection pool (1024 by default). Use higher values (for example 100000-200000 on 8G workstation is good).
 
-license
+License
 =======
 
 This go program licensed under GPLv3. See LICENSE.
