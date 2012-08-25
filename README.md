@@ -9,7 +9,7 @@ This tool targeted for load testing and may really down badly configured server.
 
 Example:
 
-    $ hulk -url http://example.com/test/
+    $ hulk -site http://example.com/test/
 
 Useful environment vars:
 
@@ -21,7 +21,11 @@ Useful environment vars:
 License
 =======
 
-This go program licensed under GPLv3. See LICENSE.
 Copyright Alexander I.Grafov <grafov@gmail.com>
+
+Original HULK utility authority of Barry Shteiman (http://sectorix.com). There are not any references to license in the original source than it not under GPL. Ask author of the original utility about license.
+ 
+Go version of HULK licensed under GPLv3. See LICENSE.
+
 
  

