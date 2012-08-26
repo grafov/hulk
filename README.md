@@ -20,6 +20,9 @@ Useful environment vars:
 * HULKMAXPROCS
   Limit the connection pool (1024 by default). To create high load use higher values.
 
+More details: http://siberian.laika.name/node/7 
+
+
 License
 =======
 
@@ -28,6 +31,3 @@ Copyright Alexander I.Grafov <grafov@gmail.com>
 Original HULK utility authority of Barry Shteiman (http://sectorix.com). There are not any references to license in the original source than it not under GPL. Ask author of the original utility about license.
  
 Go version of HULK licensed under GPLv3. See LICENSE.
-
-
- 
