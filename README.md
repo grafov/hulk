@@ -7,16 +7,18 @@ I just ported utility as is quick and dirty. Original functions names are keeped
 
 This tool targeted for load testing and may really down badly configured server. Use it wisely.
 
-Example:
+Examples:
 
-    $ hulk -site http://example.com/test/
+    $ hulk -site http://example.com/test/ 2>/dev/null
+
+    $ HULKMAXPROCS=4096 hulk -site http://example.com 2>/tmp/errlog
 
 Useful environment vars:
 
 * GOMAXPROCS
   Set it to number of your CPUs or higher.
-* HULKMAXPROC
-  Limit the connection pool (1024 by default). Use higher values (for example 100000-200000 on 8G workstation is good).
+* HULKMAXPROCS
+  Limit the connection pool (1024 by default). To create high load use higher values.
 
 License
 =======
