@@ -3,7 +3,13 @@ Hulk DoS tool
 
 HULK DoS tool ported to Go language from Python. 
 Original Python utility by Barry Shteiman http://www.sectorix.com/2012/05/17/hulk-web-server-dos-tool/
+
 I just ported utility as is quick and dirty. Original functions names are keeped and original logic mostly keeped too.
+Minor features added:
+
+* you may set custom number of threads used for requests
+* also set number of CPU cores used by program (nice Go feature)
+* program correctly killed by Ctl+C
 
 This tool targeted for load testing and may really down badly configured server. Use it wisely.
 
