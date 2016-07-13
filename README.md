@@ -29,8 +29,7 @@ Useful environment vars:
 More details: http://siberian.laika.name/node/7 
 
 Update: well, I created this utility for one time task when I only played a bit with golang. Surprisingly I found that
-this utility used by other people and got some stars on github. So I cleaned up code a bit and fixed behaviour when too low
-limit of open files set in the environment.
+this utility used by other people, got some stars on github and even included in [BlackArch Linux distro](http://blackarch.org/dos.html). So I cleaned up code a bit.
 
 License
 =======
