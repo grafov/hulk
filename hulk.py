@@ -146,8 +146,8 @@ else:
 		url = sys.argv[1]
 		if url.count("/")==2:
 			url = url + "/"
-		m = re.search('http?s\://([^/]*)/?.*', url)
-		host = m.group(1)
+		m = re.search('(https?\://)?([^/]*)/?.*', url)
+		host = m.group(2)
 		for i in range(500):
 			t = HTTPThread()
 			t.start()
