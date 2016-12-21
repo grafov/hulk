@@ -26,7 +26,7 @@ Useful environment vars:
 * HULKMAXPROCS
   Limit the connection pool (1024 by default).
 
-More details: http://siberian.laika.name/node/7 
+More details: http://old.siberian.laika.name/node/7 
 
 Update: well, I created this utility for one time task when I only played a bit with golang. Surprisingly I found that
 this utility used by other people, got some stars on github and even included in [BlackArch Linux distro](http://blackarch.org/dos.html). So I cleaned up code a bit.
@@ -34,9 +34,9 @@ this utility used by other people, got some stars on github and even included in
 License
 =======
 
-I think it may be public domain because of it just simple and short piece of code but for reason I don't remember already
+I think it may be public domain because of it is just simple and short piece of code but for reason I don't remember already
 I have choose GPL for it. Okey. So, Go version of HULK licensed under GPLv3. See LICENSE.
 
-I am not related with original HULK utility in Python. Original HULK utility is authority of Barry Shteiman (http://sectorix.com). There are not any references to license in the original source than it not under GPL. Ask author of the original utility about license. 
+I am not related with original HULK utility in Python. Original HULK utility is authority of Barry Shteiman (http://sectorix.com). There are not any references to license in the original source then it is not under GPL. Ask author of the original utility about license. 
  
 
