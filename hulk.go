@@ -23,7 +23,7 @@ import (
 	"syscall"
 )
 
-const __version__  = "1.0.0"
+const __version__  = "1.0.1"
 
 // const acceptCharset = "windows-1251,utf-8;q=0.7,*;q=0.7" // use it for runet
 const acceptCharset = "ISO-8859-1,utf-8;q=0.7,*;q=0.7"
@@ -88,7 +88,7 @@ func main() {
 	flag.StringVar(&site, "site", "http://localhost", "Destination site.")
 	flag.StringVar(&agents, "agents", "", "Get the list of user-agent lines from a file. By default the predefined list of useragents used.")
 	flag.StringVar(&data, "data", "", "Data to POST. If present hulk will use POST requests instead of GET")
-	flag.Var(&headers, "headers", "Add headers to the request. Could be used multiple times")
+	flag.Var(&headers, "header", "Add headers to the request. Could be used multiple times")
 	flag.Parse()
 
 	t := os.Getenv("HULKMAXPROCS")
