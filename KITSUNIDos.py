@@ -70,8 +70,8 @@ def buildblock(size):
 
 def usage():
 	print '---------------------------------------------------'
-	print 'USAGE: python hulk.py <url>'
-	print 'you can add "safe" after url, to autoshut after dos'
+	print 'USE: python hulk.py <url>'
+	print 'você pode adicionar "safe" após o url, para desligar automaticamente após o dos'
 	print '---------------------------------------------------'
 
 	
@@ -128,7 +128,7 @@ class MonitorThread(threading.Thread):
 				print "%d Requests Sent" % (request_counter)
 				previous=request_counter
 		if flag==2:
-			print "\n-- HULK Attack Finished --"
+			print "\n-- KITSUNI Ataque finalizado --"
 
 #execute 
 if len(sys.argv) < 2:
@@ -139,7 +139,7 @@ else:
 		usage()
 		sys.exit()
 	else:
-		print "-- HULK Attack Started --"
+		print "-- KITSUNI Ataque iniciado --"
 		if len(sys.argv)== 3:
 			if sys.argv[2]=="safe":
 				set_safe()
