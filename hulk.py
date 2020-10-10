@@ -12,15 +12,6 @@ from banner import asciiart
 def banner():
     asciiart()
 
-
-## useragents and referers of the requests
-def headersKey():
-    with open('headersReferers.txt', 'r') as r:
-        headerReferers = r.read().replace(",", '').split()
-    with open('headeruseragents.txt', 'r') as r:
-        headerUseragents = r.read().replace(",", '').split()
-    return headerUseragents, headerReferers
-
 ## Generating random strings
 def asciigen(size):
     result_str = ''.join(random.choice(string.ascii_uppercase) for i in range(size))
