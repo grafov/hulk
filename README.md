@@ -15,6 +15,8 @@ This tool targeted for stress testing and may really down badly configured serve
 
 ## Examples go:
 ```
+    $ cd hulk_go
+    
     $ go run hulk.go -site http://example.com/test/ 2>/dev/null
 
     $ HULKMAXPROCS=4096 hulk -site http://example.com 2>/tmp/errlog
