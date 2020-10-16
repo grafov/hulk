@@ -108,8 +108,7 @@ def dos(DOS, url, repeat):
 def main(site, thread_count, quiet):
     if not quiet:
         asciiart()
-
-        # TODO: change None, None to doser(), Encoder()
+        
     dos_func = partial(dos, doser(), site, 500)
     threads = []
     for _ in range(thread_count):
