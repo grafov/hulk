@@ -9,7 +9,10 @@ The main difference from Python version layed in Golang architecture for concurr
 a new thread for each connection in the connection pool so it uses hundreds and thousands of threads. 
 hulk.go just uses lightweight goroutines that used only tens of threads (commonly golang runtime started one thread for
 CPU core + several service threads). This architecture allows golang version better consume resources and got much higher 
-connection pool on the same hardware than Python version can.
+connection pool on the same hardware than Python version can
+### Prerequisites:
+1. python2
+2. git
 
 This tool targeted for stress testing and may really down badly configured server or badly made app. Use it carefully.
 
