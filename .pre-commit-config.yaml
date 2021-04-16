@@ -1,0 +1,33 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+        types: [python]
+      - id: requirements-txt-fixer
+  - repo: https://github.com/psf/black
+    rev: stable
+    hooks:
+      - id: black
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.5.3
+    hooks:
+      - id: isort
+        args:
+          - --profile=black
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.3
+    hooks:
+      - id: flake8
+        args:
+          - --ignore=E203,W503, E501
+          - --max-complexity=25
+          - --max-line-length=88
+  - repo: https://github.com/codespell-project/codespell
+    rev: v1.17.1
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words-list=ans,fo,followings,hist,iff,mater,secant,som,tim
+          - --quiet-level=2
