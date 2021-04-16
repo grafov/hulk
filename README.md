@@ -13,13 +13,19 @@ connection pool on the same hardware than Python version can.
 
 This tool targeted for stress testing and may really down badly configured server or badly made app. Use it carefully.
 
-Examples:
-
-    $ hulk -site http://example.com/test/ 2>/dev/null
+## Examples go:
+```
+    $ cd hulk_go
+    
+    $ go run hulk.go -site http://example.com/test/ 2>/dev/null
 
     $ HULKMAXPROCS=4096 hulk -site http://example.com 2>/tmp/errlog
-
-Useful environment vars:
+```
+## Examples python:
+```
+    $ python3 hulk.py --site http://example.com/test/
+```
+## Useful environment vars for golang version:
 
 * GOMAXPROCS
   Set it to number of your CPUs or higher (no more actual for latest golang versions).
@@ -38,5 +44,3 @@ I think it may be public domain because of it is just simple and short piece of 
 I have choose GPL for it. Okey. So, Go version of HULK licensed under GPLv3. See LICENSE.
 
 I am not related with original HULK utility in Python. Original HULK utility is authority of Barry Shteiman (http://sectorix.com). There are not any references to license in the original source then it is not under GPL. Ask author of the original utility about license. 
- 
-

