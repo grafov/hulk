@@ -13,6 +13,7 @@ import threading
 import random
 import re
 
+Print("TOOLS DDOS BY DV VĂN KỲ")
 #global params
 url=''
 host=''
