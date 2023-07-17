@@ -1,4 +1,4 @@
-FROM golang:1-alpine
+fffFROM golang:1-alpine
 LABEL maintainer="Alexander I.Grafov <grafov@gmail.com>"
 
 RUN apk add --no-cache git \
